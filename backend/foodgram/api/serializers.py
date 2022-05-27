@@ -178,7 +178,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 ).delete()
                 recipe.delete()
                 raise serializers.ValidationError(
-                    'Duplicated ingredient'
+                    'Ингредиент уже есть в рецепте'
                 )
         return recipe
 
@@ -223,12 +223,17 @@ class FollowSerializer(serializers.ModelSerializer):
     first_name = serializers.ReadOnlyField(source='author.first_name')
     last_name = serializers.ReadOnlyField(source='author.last_name')
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(
+        source='author.recipes.count',
+        read_only=True
+    )
 
     class Meta:
         model = Follow
         fields = (
-            'id', 'username', 'email', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count'
+            'id', 'username', 'email', 'first_name',
+            'last_name', 'is_subscribed', 'recipes',
+            'recipes_count'
         )
 
     def get_is_subscribed(self, obj):
@@ -241,9 +246,11 @@ class FollowSerializer(serializers.ModelSerializer):
             and request.user.is_authenticated
         )
 
-    def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.author).count()
-
     def get_recipes(self, obj):
-        recipes = Recipe.objects.filter(suthor=obj.author)
+        recipes_limit = int(
+            self.context.get('request').query_params['recipes_limit']
+        )
+        recipes = obj.author.recipes.all()[:recipes_limit]
+        serializer = RecipeSmallSerializer(recipes, many=True)
+        return serializer.data
         

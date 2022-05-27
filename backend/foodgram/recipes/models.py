@@ -1,13 +1,8 @@
 from colorfield.fields import ColorField
 from django.db import models
+from django.core.validators import MinValueValidator
 
 from users.models import User
-
-UNITS = [
-    ('kg', 'kilograms'),
-    ('g', 'grams'),
-    ('pc', 'pieces'),
-]
 
 
 class Ingredient(models.Model):
@@ -15,11 +10,9 @@ class Ingredient(models.Model):
         verbose_name='название',
         max_length=150,
     )
-    amount = models.FloatField()
     units = models.CharField(
-        max_length=3,
-        choices=UNITS,
-        default='g',
+        verbose_name='единицы измерения',
+        max_length=254,
     )
 
     class Meta:
@@ -101,13 +94,16 @@ class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
+        related_name='ingredientrecipes',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        related_name='ingredientrecipes',
     )
     amount = models.PositiveIntegerField(
         default=1,
+        validators=[MinValueValidator(1)],
     )
 
     class Meta:

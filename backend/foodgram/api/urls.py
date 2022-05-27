@@ -6,9 +6,9 @@ from .views import (CartViewSet, FavoriteViewSet, FollowViewSet,
                     TagViewSet)
 
 router = DefaultRouter()
-router.register(r'ingredients', IngredientViewSet, basename='ingredients')
-router.register(r'recipes', RecipeViewSet, basename='recipes')
-router.register(r'tags', TagViewSet, basename='tags')
+router.register('ingredients', IngredientViewSet, basename='ingredients')
+router.register('recipes', RecipeViewSet, basename='recipes')
+router.register('tags', TagViewSet, basename='tags')
 
 
 urlpatterns = [
@@ -38,6 +38,6 @@ urlpatterns = [
         name='to_subscribe'
     ),
     path('', include('djoser.urls')),
-    path(r'auth/', include('djoser.urls.authtoken')),
+    path('auth/', include('djoser.urls.authtoken')),
     path('', include(router.urls)),
 ]

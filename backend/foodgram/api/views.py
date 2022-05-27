@@ -10,7 +10,6 @@ from rest_framework.views import APIView
 from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
                             Recipe, Tag)
 from users.models import Follow, User
-
 from .filters import RecipeFilter
 from .pagination import PageLimitPagination
 from .permissions import IsAuthorOrReadOnly
@@ -41,7 +40,7 @@ class FollowViewSet(viewsets.ModelViewSet):
         )
         if author == request.user:
             return Response(
-                'You cannot follow yourself',
+                'Нельзя подписываться на себя',
                 status=HTTPStatus.BAD_REQUEST
             )
         follow = get_object_or_404(
@@ -68,14 +67,13 @@ class FollowViewSet(viewsets.ModelViewSet):
         return Response(status=HTTPStatus.NO_CONTENT)
 
 
-class IngredientViewSet(viewsets.ModelViewSet):
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
     permission_classes = (permissions.AllowAny,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     search_fields = ('name',)
-    http_method_names = ('get',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -94,12 +92,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag. objects.all()
     serializer_class = TagSerializer
     pagination_class = None
     permission_classes = (permissions.AllowAny,)
-    http_method_names = ('get',)
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
@@ -137,11 +134,11 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
 
 class CartViewSet(viewsets.ModelViewSet):
-    queryset = Cart.objects.filter(
-        user=self.request.user,
-    )
     serializer_class = CartSerializer
     permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return Cart.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         recipe = get_object_or_404(
@@ -153,7 +150,7 @@ class CartViewSet(viewsets.ModelViewSet):
                 recipe=recipe
             ).exists():
             return Response(
-                'This recipe already is in cart',
+                'Этот рецепт уже в корзине',
                 status=HTTPStatus.BAD_REQUEST
             )
         serializer = RecipeSmallSerializer
@@ -177,7 +174,6 @@ class CartViewSet(viewsets.ModelViewSet):
 
 class ShoppingListViewSet(APIView):
     permission_classes = (permissions.IsAuthenticated,)
-    http_method_names = ('get',)
 
     def get(self, request):
         user = request.user
