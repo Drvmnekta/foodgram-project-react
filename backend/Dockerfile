@@ -8,8 +8,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 COPY ./ ./
 
-RUN pwd && ls
-
-RUN python3 /app/foodgram/manage.py makemigrations && python3 /app/foodgram/manage.py migrate && python3 /app/foodgram/manage.py collectstatic && python3 /app/foodgram/manage.py load_ingredients
+# RUN python3 /app/foodgram/manage.py makemigrations && python3 /app/foodgram/manage.py migrate && python3 /app/foodgram/manage.py collectstatic && python3 /app/foodgram/manage.py load_ingredients
 
 CMD gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000 
