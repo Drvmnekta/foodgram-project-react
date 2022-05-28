@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY /foodgram/requirements.txt .
 
-RUN pip3 install -r /app/requirements.txt --no-cache-dir
+RUN pip install -r /app/foodgram/requirements.txt --no-cache-dir
 
 COPY ./ ./
 
