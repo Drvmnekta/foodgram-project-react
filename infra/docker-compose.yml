@@ -10,9 +10,7 @@ services:
       - ./.env
 
   backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
+    image: drvmnekta/foodgram_back:latest
     restart: always
     volumes:
       - static_value:/app/static/
@@ -23,11 +21,11 @@ services:
       - ./.env
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: drvmnekta/foodgram_front:latest
     volumes:
       - ../frontend/:/app/result_build/
+    depends_on:
+      - backend
 
   nginx:
     image: nginx:1.19.3
