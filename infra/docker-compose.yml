@@ -3,14 +3,19 @@ services:
 
   db:
     image: postgres:13.0-alpine
+    environment:
+      POSTGRES_DB: "db"
+      POSTGRES_HOST_AUTH_METHOD: "trust"
     volumes: 
       - postgres_data:/var/lib/postgresql/data
     restart: always
     env_file:
-      - ./.env
+      - ../backend/.env
 
   backend:
-    image: drvmnekta/foodgram_back:latest
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
     restart: always
     volumes:
       - static_value:/app/static/
@@ -18,10 +23,12 @@ services:
     depends_on:
       - db
     env_file:
-      - ./.env
+      - ../backend/.env
 
   frontend:
-    image: drvmnekta/foodgram_front:latest
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:

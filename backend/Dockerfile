@@ -10,4 +10,4 @@ COPY ./ ./
 
 CMD gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000 
 
-RUN python3 /app/manage.py makemigrations && python3 /app/manage.py migrate && python3 /app/manage.py collectstatic && python3 /app/manage.py load_ingredients
+# RUN python3 /app/manage.py makemigrations && python3 /app/manage.py migrate && python3 /app/manage.py collectstatic && python3 /app/manage.py load_ingredients
