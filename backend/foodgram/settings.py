@@ -106,24 +106,30 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATIC_URL = '/static/'
 
-# STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
-    'AUTH_HEADER_TYPES': ('Bearer',),
+DJOSER = {
+    'SERIALIZERS': {
+        'user': 'api.serializers.UserSerializer',
+        'user_create': 'api.serializers.UserSerializer',
+        'current_user': 'api.serializers.UserSerializer',
+    },
+    'PERMISSIONS': {
+        'user_list': ('rest_framework.permissions.AllowAny',),
+        'user': ('rest_framework.permissions.AllowAny',),
+    },
+    'HIDE_USERS': False,
 }
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 
     'DEFAULT_AUTHENTICATIONS_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
