@@ -62,12 +62,15 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'email', 'first_name', 'last_name', 'is_subscribed'
+            'id', 'username', 'email', 'first_name',
+            'last_name', 'is_subscribed', 'password'
         )
         extra_kwargs = {'password' : {'write_only': True}}
 
     def create(self, validated_data):
-        validated_data['password'] = (make_password(validated_data.pop('password')))
+        validated_data['password'] = (
+            make_password(validated_data.pop('password'))
+        )
         return super().create(validated_data)
 
     def get_is_subscribed(self, obj):
