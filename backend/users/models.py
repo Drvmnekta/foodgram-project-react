@@ -14,6 +14,10 @@ class User(AbstractUser):
         max_length=150,
         unique=True,
     )
+    password = models.CharField(
+        verbose_name='Пароль',
+        max_length=150,
+    )
     first_name = models.CharField(
         verbose_name='Имя',
         max_length=150,
