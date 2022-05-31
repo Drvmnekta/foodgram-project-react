@@ -31,13 +31,13 @@ class User(AbstractUser):
         default=False
     )
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ('email', 'password')
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username', 'password')
 
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        ordering = ('id',)
+        ordering = ('-id',)
 
     def __str__(self):
         return self.username
@@ -53,7 +53,7 @@ class Follow(models.Model):
         related_name='following',
         verbose_name='автор',
     )
-    follower = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='follower',
@@ -63,10 +63,10 @@ class Follow(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['author', 'follower'],
+                fields=['author', 'user'],
                 name='unique_follow',
             )
         ]
 
     def __str__(self):
-        return f'{self.follower} follows {self.author}'
+        return f'{self.user} follows {self.author}'

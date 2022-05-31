@@ -33,7 +33,7 @@ class CartSerializer(serializers.ModelSerializer):
 class RecipeSmallSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
-        fields = ('id', 'title', 'image', 'duration')
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 
 class IngredientRecipeSmallSerializer(serializers.ModelSerializer):
@@ -53,7 +53,7 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientRecipe
-        fields = ('id', 'name', 'units', 'amount')
+        fields = ('id', 'name', 'measurement_units', 'amount')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -75,6 +75,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
+        if request.user.is_anonymous():
+            return False
         return (
             request.user.is_authenticated
             and Follow.objects.filter(
@@ -85,8 +87,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
-    is_favorite = serializers.SerializerMethodField()
-    is_in_cart = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField(
+    )
     tags = TagSerializer(many=True)
     author = UserSerializer(many=False)
     ingredients = IngredientRecipeSerializer(
@@ -98,8 +101,10 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = '__all__'
 
-    def get_is_favorite(self, obj):
+    def get_is_favorited(self, obj):
         request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
         return (
             request.user.is_authenticated
             and Favorite.objects.filter(
@@ -108,8 +113,10 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             ).exists()
         )
 
-    def get_is_in_cart(self, obj):
+    def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
         return (
             request.user.is_authenticated
             and Cart.objects.filter(
@@ -134,15 +141,17 @@ class RecipePostSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         many=True
     )
-    is_favorite = serializers.SerializerMethodField()
-    is_in_cart = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = '__all__'
 
-    def get_is_favorite(self, obj):
+    def get_is_favorited(self, obj):
         request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
         return (
             request.user.is_authenticated
             and Favorite.objects.filter(
@@ -151,8 +160,10 @@ class RecipePostSerializer(serializers.ModelSerializer):
             ).exists()
         )
 
-    def get_is_in_cart(self, obj):
+    def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
         return (
             request.user.is_authenticated
             and Cart.objects.filter(
@@ -187,31 +198,29 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         author = validated_data.get('author')
-        title = validated_data.get('title')
+        name = validated_data.get('name')
         image = validated_data.get('image')
-        description = validated_data.get('description')
+        text = validated_data.get('text')
         ingredients = validated_data.pop('recipes')
-        tag = validated_data.pop('tag')
-        duration = validated_data.get('duration')
-        pub_date = validated_data.get('pub_date')
+        tags = validated_data.pop('tags')
+        cooking_time = validated_data.get('cooking_time')
         recipe = Recipe.objects.create(
             author=author,
-            title=title,
+            name=name,
             image=image,
-            description=description,
-            duration=duration,
-            pub_date=pub_date,
+            text=text,
+            cooking_time=cooking_time,
         )
-        recipe = self.add_tags_and_ingredients(tag, ingredients, recipe)
+        recipe = self.add_tags_and_ingredients(tags, ingredients, recipe)
         return recipe
 
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('recipes')
-        tag = validated_data.pop('tag')
+        tags = validated_data.pop('tags')
         TagRecipe.objects.filter(recipe=instance).delete()
         IngredientRecipe.objects.filter(recipe=instance).delete()
         instance = self.add_tags_and_ingredients(
-            tag, ingredients, instance
+            tags, ingredients, instance
         )
         super().update(instance, validated_data)
         instance.save()
@@ -241,6 +250,8 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
         return (
             Follow.objects.filter(
                 follower=request.user,

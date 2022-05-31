@@ -1,6 +1,12 @@
 import django_filters
+from distutils.util import strtobool
 
-from recipes.models import Recipe
+from recipes.models import Recipe, Cart, Favorite
+
+CHOICES = (
+    ('0', 'False'),
+    ('1', 'True')
+)
 
 
 class RecipeFilter(django_filters.FilterSet):
@@ -10,25 +16,38 @@ class RecipeFilter(django_filters.FilterSet):
     tags = django_filters.AllValuesMultipleFilter(
         field_name='tags__slug',
     )
-    is_favorite = django_filters.BooleanFilter(
-        method='get_is_favorite',
+    is_favorited = django_filters.TypedChoiceFilter(
+        choices=CHOICES,
+        coerce=strtobool,
+        method='get_is_favorited'
     )
-    is_in_cart = django_filters.BooleanFilter(
-        method='get_is_in_cart',
+    is_in_shopping_cart = django_filters.TypedChoiceFilter(
+        choices=CHOICES,
+        coerce=strtobool,
+        method='get_is_in_shopping_cart'
     )
 
     class Meta:
         model = Recipe
         fields = (
-            'author', 'tag', 'is_favorite', 'is_in_cart'
+            'author', 'tag', 'is_favorited', 'is_in_shopping_cart'
         )
 
-    def get_is_favorite(self, queryset, name, value):
-        if self.request.user.is_authenticated and value:
-            return queryset.filter(favorites__user=self.request.user)
-        return queryset
+    def get_is_favorited(self, queryset, name, value):
+        if not value:
+            return queryset
+        favorites = Favorite.objects.filter(user=self.request.user)
+        return queryset.filter(
+            pk__in=(favorite.recipe.pk for favorite in favorites)
+        )
 
-    def get_is_in_cart(self, queryset, name, value):
-        if self.request.user.is_authenticated and value:
-            return queryset.filter(carts__user=self.request.user)
-        return queryset.all()
+    def get_is_in_shopping_cart(self, queryset, name, value):
+        if not value:
+            return queryset
+        try:
+            carts = Cart.objects.filter(user=self.request.user)
+        except Cart.DoesNotExist:
+            return queryset
+        return queryset.filter(
+            pk__in=(cart.recipe.pk for cart in carts)
+        )

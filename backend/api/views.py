@@ -31,7 +31,7 @@ class FollowViewSet(viewsets.ModelViewSet):
     pagination_class = PageLimitPagination
 
     def get_queryset(self):
-        return Follow.objects.filter(follower=self.request.user)
+        return Follow.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         author = get_object_or_404(
@@ -46,7 +46,7 @@ class FollowViewSet(viewsets.ModelViewSet):
         follow = get_object_or_404(
             Follow,
             author=author,
-            follower=request.user
+            user=request.user
         )
         serializer = FollowSerializer(follow, many=False)
         return Response(
@@ -62,7 +62,7 @@ class FollowViewSet(viewsets.ModelViewSet):
         get_object_or_404(
             Follow,
             author=author,
-            follower=request.user
+            user=request.user
         ).delete()
         return Response(status=HTTPStatus.NO_CONTENT)
 

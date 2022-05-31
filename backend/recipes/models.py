@@ -10,7 +10,7 @@ class Ingredient(models.Model):
         verbose_name='название',
         max_length=150,
     )
-    units = models.CharField(
+    measurement_unit = models.CharField(
         verbose_name='единицы измерения',
         max_length=254,
     )
@@ -24,7 +24,7 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
-    title = models.CharField(
+    name = models.CharField(
         max_length=150,
     )
     color = ColorField(
@@ -51,7 +51,7 @@ class Recipe(models.Model):
         verbose_name='автор рецепта',
         on_delete=models.CASCADE,
     )
-    title = models.CharField(
+    name = models.CharField(
         verbose_name='Название',
         max_length=254,
     )
@@ -60,7 +60,7 @@ class Recipe(models.Model):
         upload_to='recipes/images/',
         blank=False,
     )
-    description = models.TextField(
+    text = models.TextField(
         verbose_name='Описание рецепта',
     )
     ingredients = models.ManyToManyField(
@@ -69,25 +69,21 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='ингредиенты рецепта',
     )
-    tag = models.ManyToManyField(
+    tags = models.ManyToManyField(
         Tag,
         through='TagRecipe',
         related_name='recipes',
         verbose_name='тэг рецепта',
     )
-    duration = models.DurationField(
+    cooking_time = models.DurationField(
         verbose_name='Время приготовления в минутах',
         help_text='Введите время приготовления (мин)',
-    )
-    pub_date = models.DateField(
-        auto_now_add=True,
-        verbose_name='дата создания',
     )
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('pub_date',)
+        ordering = ('-id',)
 
 
 class IngredientRecipe(models.Model):
