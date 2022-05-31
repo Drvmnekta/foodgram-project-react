@@ -6,14 +6,14 @@ from .models import (Cart, Favorite, Ingredient, IngredientRecipe, Recipe, Tag,
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('title', 'color', 'slug')
-    search_fields = ('title',)
+    list_display = ('name', 'color', 'slug')
+    search_fields = ('name',)
     empty_value_display = '-empty-'
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'units')
+    list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
     empty_value_display = '-empty-'
 
@@ -33,17 +33,15 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = (IngredientRecipeInLine, TagRecipeInLine,)
     list_display = (
         'author',
-        'title',
+        'name',
         'image',
-        'description',
-        'duration',
-        'pub_date'
+        'text',
+        'cooking_time',
     )
     search_fields = (
-        'title',
+        'name',
         'author',
-        'duration',
-        'pub_date'
+        'cooking_time',
     )
     empty_value_display = '-empty-'
 
