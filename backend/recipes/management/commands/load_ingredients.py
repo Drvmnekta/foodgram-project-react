@@ -10,5 +10,5 @@ class Command(BaseCommand):
             for item in data:
                 Ingredient.objects.create(
                     name=item['name'],
-                    units=item['measurement_unit']
+                    measurement_unit=item['measurement_unit']
                 )

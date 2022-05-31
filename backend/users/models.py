@@ -1,29 +1,6 @@
-from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.db import models
 
-
-class UserManager(BaseUserManager):
-    def create_user(self, email, username, password, **extra_fields):
-        if not username:
-            raise ValueError('Поле Логи не может быть пустым!')
-        if not email:
-            raise ValueError('Поле Почта не может быть пустым!')
-        email = self.normalize_email(email)
-        user = self.model(email=email, username=username, **extra_fields)
-        user.password = make_password(password)
-        user.save()
-        return user
-
-    def create_superuser(self, email, username, password, **extra_fields):
-        extra_fields.setdefault('is_superuser', True)
-
-        if not extra_fields.get('is_superuser'):
-            raise ValueError(
-                'Поле is_superuser должно быть True!'
-            )
-        return self.create_user(email, username, password, **extra_fields)
 
 class User(AbstractUser, PermissionsMixin):
 
@@ -57,8 +34,6 @@ class User(AbstractUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ('username', 'password')
 
-    objects = UserManager()
-
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -66,10 +41,7 @@ class User(AbstractUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
-
-    @property
-    def is_staff(self):
-        return self.is_superuser
+        
 
 class Follow(models.Model):
     author = models.ForeignKey(

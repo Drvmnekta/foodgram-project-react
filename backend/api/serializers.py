@@ -61,10 +61,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
+        '''fields = (
             'id', 'username', 'email', 'first_name',
             'last_name', 'is_subscribed', 'password'
-        )
+        )'''
+        fields = '__all__'
         extra_kwargs = {'password' : {'write_only': True}}
 
     def create(self, validated_data):
@@ -75,12 +76,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request.user.is_anonymous():
+        if request.user.is_anonymous:
             return False
         return (
             request.user.is_authenticated
             and Follow.objects.filter(
-                follower=request.user,
+                user=request.user,
                 author__id=obj.id
             ).exists()
         )
