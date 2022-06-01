@@ -234,7 +234,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         name = validated_data.get('name')
         image = validated_data.get('image')
         text = validated_data.get('text')
-        ingredients = validated_data.pop('recipes')
+        ingredients = validated_data.pop('ingredientrecipes')
         tags = validated_data.pop('tags')
         cooking_time = validated_data.get('cooking_time')
         recipe = Recipe.objects.create(
