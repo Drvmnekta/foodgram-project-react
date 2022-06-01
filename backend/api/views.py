@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from django.db import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -145,19 +146,15 @@ class CartViewSet(viewsets.ModelViewSet):
             Recipe,
             id=self.kwargs.get('recipe_id')
         )
-        if Cart.objects.filter(
-                user=request.user,
-                recipe=recipe
-            ).exists():
+        try:
+            Cart.objects.create(user=self.request.user, recipe=recipe)
+        except IntegrityError:
             return Response(
-                'Этот рецепт уже в корзине',
+                'Этот рецепт уже в списке покупок',
                 status=HTTPStatus.BAD_REQUEST
             )
-        serializer = RecipeSmallSerializer
-        return Response(
-            data=serializer.data,
-            status=HTTPStatus.CREATED
-        )
+        serializer = RecipeSmallSerializer(recipe, many=False)
+        return Response(data=serializer.data, status=HTTPStatus.CREATED)
     
     def delete(self, request, *args, **kwargs):
         recipe = get_object_or_404(
