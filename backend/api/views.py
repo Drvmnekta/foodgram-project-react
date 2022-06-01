@@ -196,7 +196,7 @@ class ShoppingListViewSet(APIView):
             units = get_object_or_404(
                 Ingredient,
                 name=item
-            ).units
+            ).measurement_unit
             content += f'{item}: {cart[item]}{units}\n'
         response = HttpResponse(
             content, content_type='text/plain,charset=utf8'

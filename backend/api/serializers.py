@@ -81,13 +81,13 @@ class IngredientRecipeSmallSerializer(serializers.ModelSerializer):
 class IngredientRecipeSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
-    units = serializers.ReadOnlyField(
-        source='ingredient.measurement_units'
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
     )
 
     class Meta:
         model = IngredientRecipe
-        fields = ('id', 'name', 'measurement_units', 'amount')
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -95,11 +95,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        '''fields = (
+        fields = (
             'id', 'username', 'email', 'first_name',
             'last_name', 'is_subscribed', 'password'
-        )'''
-        fields = '__all__'
+        )
         extra_kwargs = {'password' : {'write_only': True}}
 
     def create(self, validated_data):
