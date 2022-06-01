@@ -48,7 +48,7 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     units = serializers.ReadOnlyField(
-        source='ingredient.units'
+        source='ingredient.measurement_units'
     )
 
     class Meta:
@@ -95,7 +95,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     author = UserSerializer(many=False)
     ingredients = IngredientRecipeSerializer(
         many=True,
-        source='recipe_ingredient'
+        source='ingredientrecipes'
     )
 
     class Meta:
@@ -135,7 +135,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         use_url=False
     )
     ingredients = IngredientRecipeSmallSerializer(
-        source='recipe_ingredient',
+        source='ingredientrecipes',
         many=True
     )
     tags = serializers.PrimaryKeyRelatedField(
