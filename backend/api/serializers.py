@@ -6,6 +6,40 @@ from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
 from users.models import Follow, User
 
 
+class Base64ImageField(serializers.ImageField):
+
+    def to_internal_value(self, data):
+        import base64
+        import uuid
+
+        import six
+        from django.core.files.base import ContentFile
+
+        if isinstance(data, six.string_types):
+            if 'data:' in data and ';base64,' in data:
+                header, data = data.split(';base64,')
+
+            try:
+                decoded_file = base64.b64decode(data)
+            except TypeError:
+                self.fail('invalid_image')
+
+            file_name = str(uuid.uuid4())[:12]
+            file_extension = self.get_file_extension(file_name, decoded_file)
+            complete_file_name = "%s.%s" % (file_name, file_extension, )
+            data = ContentFile(decoded_file, name=complete_file_name)
+
+        return super(Base64ImageField, self).to_internal_value(data)
+
+    def get_file_extension(self, file_name, decoded_file):
+        import imghdr
+
+        extension = imghdr.what(file_name, decoded_file)
+        extension = "jpg" if extension == "jpeg" else extension
+
+        return extension
+
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -129,9 +163,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 class RecipePostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
-    image = serializers.ImageField(
+    image = Base64ImageField(
         max_length=None,
-        allow_empty_file=False,
         use_url=False
     )
     ingredients = IngredientRecipeSmallSerializer(
@@ -251,21 +284,24 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request.user.is_anonymous:
-            return False
+        if not request:
+            return True
         return (
             Follow.objects.filter(
-                follower=request.user,
+                user=request.user,
                 author__id=obj.id
             ).exists()
             and request.user.is_authenticated
         )
 
     def get_recipes(self, obj):
-        recipes_limit = int(
-            self.context.get('request').query_params['recipes_limit']
-        )
-        recipes = obj.author.recipes.all()[:recipes_limit]
+        try:
+            recipes_limit = int(
+                self.context.get('request').query_params['recipes_limit']
+            )
+            recipes = Recipe.objects.filter(author=obj.author)[:recipes_limit]
+        except Exception:
+            recipes = Recipe.objects.filter(author=obj.author)
         serializer = RecipeSmallSerializer(recipes, many=True)
         return serializer.data
         
