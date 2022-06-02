@@ -1,5 +1,6 @@
 import django_filters
 from distutils.util import strtobool
+from rest_framework import filters
 
 from recipes.models import Recipe, Cart, Favorite
 
@@ -51,3 +52,6 @@ class RecipeFilter(django_filters.FilterSet):
         return queryset.filter(
             pk__in=(cart.recipe.pk for cart in carts)
         )
+
+class IngredientFilter(filters.SearchFilter):
+    search_param = 'name'

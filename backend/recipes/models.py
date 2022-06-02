@@ -75,7 +75,8 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='тэг рецепта',
     )
-    cooking_time = models.DurationField(
+    cooking_time = models.IntegerField(
+        validators=[MinValueValidator(1)],
         verbose_name='Время приготовления в минутах',
         help_text='Введите время приготовления (мин)',
     )

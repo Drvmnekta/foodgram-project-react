@@ -205,6 +205,24 @@ class RecipePostSerializer(serializers.ModelSerializer):
             ).exists()
         )
 
+    def validate_ingredients(self, value):
+        ingredients_list = []
+        ingredients = value
+        for ingredient in ingredients:
+            if ingredient['amount'] < 1:
+                raise serializers.ValidationError(
+                    'Убедитесь, что количество больше 0')
+            check_id = ingredient['ingredient']['id']
+            check_ingredient = Ingredient.objects.filter(id=check_id)
+            if not check_ingredient.exists():
+                raise serializers.ValidationError(
+                    'Ингредиент отсутствует')
+            if check_ingredient in ingredients_list:
+                raise serializers.ValidationError(
+                    'Ингредиент повторяется')
+            ingredients_list.append(check_ingredient)
+        return value
+
     def add_tags_and_ingredients(self, tags, ingredients, recipe):
         for tag in tags:
             recipe.tags.add(tag)

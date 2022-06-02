@@ -4,20 +4,21 @@ from django.db import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets
+from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
                             Recipe, Tag)
 from users.models import Follow, User
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientFilter
 from .pagination import PageLimitPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (CartSerializer, FavoriteSerializer, FollowSerializer,
                           IngredientSerializer, RecipeGetSerializer,
                           RecipePostSerializer, RecipeSmallSerializer,
                           TagSerializer, UserSerializer)
+from .mixins import CreateDestroyViewSet
 
 
 class UserViewset(viewsets.ModelViewSet):
@@ -42,6 +43,13 @@ class FollowViewSet(viewsets.ModelViewSet):
         if author == request.user:
             return Response(
                 'Нельзя подписываться на себя',
+                status=HTTPStatus.BAD_REQUEST
+            )
+        try:
+            Follow.objects.create(author=author, user=self.request.user)
+        except IntegrityError:
+            return Response(
+                'Вы уже подписаны на данного автора',
                 status=HTTPStatus.BAD_REQUEST
             )
         follow = get_object_or_404(
@@ -73,8 +81,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     pagination_class = None
     permission_classes = (permissions.AllowAny,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('name',)
+    filter_backends = (DjangoFilterBackend, IngredientFilter)
+    search_fields = ('^name',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -100,11 +108,12 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.AllowAny,)
 
 
-class FavoriteViewSet(viewsets.ModelViewSet):
-    queryset = Favorite.objects.all()
+class FavoriteViewSet(CreateDestroyViewSet):
     serializer_class = FavoriteSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    http_method_names = ('post', 'delete')
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
         recipe = get_object_or_404(
@@ -115,7 +124,10 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             user=request.user,
             recipe=recipe
         )
-        serializer = RecipeSmallSerializer
+        serializer = RecipeSmallSerializer(
+            recipe,
+            many=False
+        )
         return Response(
             data=serializer.data,
             status=HTTPStatus.CREATED
